@@ -1,0 +1,17 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 30  # Hz
+
+    # Define the active controllers we want to start
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+arm_position_controller:
+  ros__parameters:
+    joints:
+      - base_to_link_1_joint
+      - link_1_to_link_2_joint
+    interface_name: position

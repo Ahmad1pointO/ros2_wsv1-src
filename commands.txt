@@ -1,0 +1,11 @@
+f robotic_arm1.urdf is a normal URDF file:
+
+Terminal 1: Start Gazebo
+source /opt/ros/humble/setup.bash
+ros2 launch gazebo_ros gazebo.launch.py
+
+Terminal 2: Spawn the URDF
+source /opt/ros/humble/setup.bash
+
+ros2 run gazebo_ros spawn_entity.py -file /home/user/ros2_wsv1/src/my_robot_description/urdf/robotic_arm1.urdf -entity robotic_arm1
+

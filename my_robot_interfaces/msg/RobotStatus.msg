@@ -1,0 +1,3 @@
+int32 robot_id
+string status_message
+float64 battery_level

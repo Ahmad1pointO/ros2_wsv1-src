@@ -1,0 +1,11 @@
+# Goal
+string room_name
+float32 patrol_speed
+---
+# Result
+bool success
+float32 time_taken
+---
+# Feedback
+string current_status
+float32 percent_complete
