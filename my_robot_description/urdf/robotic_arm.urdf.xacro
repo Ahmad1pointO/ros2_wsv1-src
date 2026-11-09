@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
-<!-- <robot name="robotic_arm"> -->
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robotic_arm1">
-
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robotic_arm">
   <link name="world"/>
 
   <!-- 1. ARM BASE LINK -->
@@ -50,7 +48,7 @@
     <origin xyz="0.0 0.0 0.2" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 0.0 1.0"/>
     <limit lower="-3.1416" upper="3.1416" effort="100.0" velocity="1.0"/>
-    <!-- ADDED DYNAMICS: Stiff base swivel rotation -->
+    <!-- ADDED DYNAMICS - Stiff base swivel rotation -->
     <dynamics damping="5.0" friction="10.0"/>
   </joint>
 
@@ -77,9 +75,51 @@
     <origin xyz="0.0 0.0 0.4" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 1.0 0.0"/>
     <limit lower="-1.5708" upper="1.5708" effort="100.0" velocity="1.0"/>
-    <!-- ADDED DYNAMICS: Stiff elbow joint to counter gravity -->
+    <!-- ADDED DYNAMICS - Stiff elbow joint to counter gravity -->
     <dynamics damping="1.0" friction="1.0"/>
   </joint>
 
 
-  </robot>
+
+
+  <!-- ROS2 CONTROL HARDWARE INTERFACE SPECIFICATION -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    
+    <!-- Joint 1: Base Swivel -->
+    <joint name="base_to_link_1_joint">
+      <command_interface name="position">
+        <param name="min">-3.1416</param>
+        <param name="max">3.1416</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <!-- Joint 2: Elbow Flex -->
+    <joint name="link_1_to_link_2_joint">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+
+
+
+  <!-- GAZEBO PLUGINS - Ties the URDF model directly to the ros2_control node -->
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <!-- <parameters>$(find my_robot_description)/config/arm_controllers.yaml</parameters> -->
+    <parameters>$(find my_robot_description)/config/arm_controllers.yaml</parameters>
+    <!-- <parameters>/home/user/ros2_wsv1/src/my_robot_description/config/arm_controllers.yaml</parameters> -->
+    </plugin>
+  </gazebo>
+
+
+</robot>
