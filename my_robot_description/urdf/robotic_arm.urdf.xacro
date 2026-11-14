@@ -1,12 +1,40 @@
 <?xml version="1.0"?>
+<!--
+  ============================== NAME LEGEND ==============================
+  [FIXED] = exact name of installed software or a ROS/URDF standard. Do NOT change.
+  [MATCH] = must be spelled exactly the same in every place listed.
+  [FREE]  = a label you chose. Rename it freely (just update the [MATCH] places, if any).
+
+  Also [FIXED]: every XML TAG and ATTRIBUTE name in this file (robot, link, joint,
+  visual, geometry, origin, parent, child, ros2_control, gazebo, plugin, ...).
+  They come from the URDF / ros2_control / Gazebo formats. Only the VALUES inside
+  the quotes are yours to choose.
+
+  WHO READS WHICH PART OF THIS FILE:
+    link / joint     => robot_state_publisher, RViz, Gazebo
+    ros2_control     => gazebo_ros2_control plugin (the ros2_control system)
+    gazebo / plugin  => Gazebo only
+  =========================================================================
+-->
+
+<!-- name="robotic_arm"  [FREE]  just the robot's name. Nothing else refers to it. -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robotic_arm">
+
+  <!-- name="world"  [FIXED]  Gazebo treats a link called exactly "world" as the ground.
+       Fixing arm_base to it stops the arm from falling over.
+       [MATCH]  also used as parent in world_to_base_joint (below). -->
   <link name="world"/>
 
   <!-- 1. ARM BASE LINK -->
+  <!-- name="arm_base"  [FREE]  but [MATCH] with:
+         world_to_base_joint     child link="arm_base"
+         base_to_link_1_joint    parent link="arm_base"
+       It also appears as a TF frame name in RViz. -->
   <link name="arm_base">
     <visual>
       <geometry> <cylinder radius="0.1" length="0.2"/> </geometry>
       <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+      <!-- material name="grey"  [FREE]  just a colour label -->
       <material name="grey"><color rgba="0.4 0.4 0.4 1.0"/></material>
     </visual>
     <collision>
@@ -20,16 +48,23 @@
     </inertial>
   </link>
 
+  <!-- name="world_to_base_joint"  [FREE]  fixed joint, not controlled, so it is
+       NOT listed in ros2_control or the YAML. Nothing else refers to it.
+       type="fixed"  [FIXED]  URDF joint type (fixed / revolute / continuous / prismatic) -->
   <joint name="world_to_base_joint" type="fixed">
     <parent link="world"/> <child link="arm_base"/>
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
   </joint>
 
   <!-- 2. LINK 1 / LOWER ARM -->
+  <!-- name="link_1"  [FREE]  but [MATCH] with:
+         base_to_link_1_joint     child link="link_1"
+         link_1_to_link_2_joint   parent link="link_1" -->
   <link name="link_1">
     <visual>
       <geometry> <box size="0.06 0.06 0.4"/> </geometry>
       <origin xyz="0.0 0.0 0.2" rpy="0.0 0.0 0.0"/>
+      <!-- material name="red"  [FREE] -->
       <material name="red"><color rgba="0.8 0.0 0.0 1.0"/></material>
     </visual>
     <collision>
@@ -43,20 +78,27 @@
     </inertial>
   </link>
 
+  <!-- name="base_to_link_1_joint"  [FREE] to choose, but once chosen it is [MATCH] in 3 places:
+         1. here                                      (defines the joint)
+         2. this file, ros2_control joint name="..."  (makes it controllable)
+         3. config/arm_controllers.yaml, under arm_position_controller joints:
+       It also shows up in the /joint_states topic. -->
   <joint name="base_to_link_1_joint" type="revolute">
     <parent link="arm_base"/> <child link="link_1"/>
     <origin xyz="0.0 0.0 0.2" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 0.0 1.0"/>
     <limit lower="-3.1416" upper="3.1416" effort="100.0" velocity="1.0"/>
-    <!-- ADDED DYNAMICS - Stiff base swivel rotation -->
+    <!-- ADDED DYNAMICS: Stiff base swivel rotation -->
     <dynamics damping="5.0" friction="10.0"/>
   </joint>
 
   <!-- 3. LINK 2 / UPPER ARM -->
+  <!-- name="link_2"  [FREE]  but [MATCH] with link_1_to_link_2_joint child link="link_2" -->
   <link name="link_2">
     <visual>
       <geometry> <box size="0.3 0.05 0.05"/> </geometry>
       <origin xyz="0.15 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <!-- material name="white"  [FREE] -->
       <material name="white"><color rgba="1.0 1.0 1.0 1.0"/></material>
     </visual>
     <collision>
@@ -70,35 +112,56 @@
     </inertial>
   </link>
 
+  <!-- name="link_1_to_link_2_joint"  [FREE] to choose, but [MATCH] in 3 places:
+         1. here
+         2. this file, ros2_control joint name="..."
+         3. config/arm_controllers.yaml, under arm_position_controller joints: -->
   <joint name="link_1_to_link_2_joint" type="revolute">
     <parent link="link_1"/> <child link="link_2"/>
     <origin xyz="0.0 0.0 0.4" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 1.0 0.0"/>
     <limit lower="-1.5708" upper="1.5708" effort="100.0" velocity="1.0"/>
-    <!-- ADDED DYNAMICS - Stiff elbow joint to counter gravity -->
+    <!-- ADDED DYNAMICS: Stiff elbow joint to counter gravity -->
     <dynamics damping="1.0" friction="1.0"/>
   </joint>
 
 
 
 
-  <!-- ROS2 CONTROL HARDWARE INTERFACE SPECIFICATION -->
+  <!-- ROS2 CONTROL HARDWARE INTERFACE SPECIFICATION
+       Read by ros2_control (through the gazebo_ros2_control plugin below).
+       It says: "these joints can be commanded, and this is the hardware driver". -->
+
+  <!-- name="GazeboSystem"  [FREE]  just a label for this hardware block. It is NOT the
+       same thing as the plugin value below, even though the words look alike.
+       type="system"  [FIXED]  ros2_control hardware type (system / actuator / sensor) -->
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
+      <!-- gazebo_ros2_control/GazeboSystem  [FIXED]  the hardware driver to use.
+           Format is  package_name/ClassName  of installed code.
+           This tells ros2_control: "my hardware is the Gazebo simulation".
+           (On a real robot you would swap only this line for your motor driver.) -->
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
-    
+
     <!-- Joint 1: Base Swivel -->
+    <!-- name="base_to_link_1_joint"  [MATCH]  with the joint above + the YAML joints: list -->
     <joint name="base_to_link_1_joint">
+      <!-- command_interface name="position"  [FIXED]  standard name (position / velocity / effort).
+           [MATCH]  with  interface_name: position  in config/arm_controllers.yaml -->
       <command_interface name="position">
+        <!-- param name="min" / "max"  [FIXED]  names GazeboSystem understands -->
         <param name="min">-3.1416</param>
         <param name="max">3.1416</param>
       </command_interface>
+      <!-- state_interface position / velocity  [FIXED]  standard names.
+           joint_state_broadcaster reads these to publish /joint_states. -->
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
 
     <!-- Joint 2: Elbow Flex -->
+    <!-- name="link_1_to_link_2_joint"  [MATCH]  with the joint above + the YAML joints: list -->
     <joint name="link_1_to_link_2_joint">
       <command_interface name="position">
         <param name="min">-1.5708</param>
@@ -112,11 +175,24 @@
 
 
 
-  <!-- GAZEBO PLUGINS - Ties the URDF model directly to the ros2_control node -->
+  <!-- GAZEBO PLUGINS: Ties the URDF model directly to the ros2_control node
+       Read by Gazebo only. It loads compiled code (a .so file) into the simulator.
+       Without this, Gazebo shows the arm but ROS cannot control it. -->
   <gazebo>
+    <!-- name="gazebo_ros2_control"  [FREE]  just a label for this plugin instance.
+         filename="libgazebo_ros2_control.so"  [FIXED]  the real library file installed
+         by the gazebo_ros2_control package. Must be spelled exactly. -->
     <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <!-- parameters  [FIXED tag]  = path to the controller YAML the plugin should load.
+         The find my_robot_description part is a xacro command. It is replaced with
+         install/my_robot_description/share/my_robot_description
+           my_robot_description  [MATCH]  package name in package.xml and CMakeLists.txt
+           config/arm_controllers.yaml  [MATCH]  real folder + file name. The config folder
+             must be in install(DIRECTORY ...) in CMakeLists.txt, and you must run
+             colcon build after editing the YAML. -->
     <!-- <parameters>$(find my_robot_description)/config/arm_controllers.yaml</parameters> -->
     <parameters>$(find my_robot_description)/config/arm_controllers.yaml</parameters>
+    <!-- Absolute path version below works too, but only on THIS computer. -->
     <!-- <parameters>/home/user/ros2_wsv1/src/my_robot_description/config/arm_controllers.yaml</parameters> -->
     </plugin>
   </gazebo>

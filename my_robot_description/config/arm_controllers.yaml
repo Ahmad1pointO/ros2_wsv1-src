@@ -1,17 +1,82 @@
+# ============================== NAME LEGEND ==============================
+# [FIXED] = exact name of installed software or a ROS standard. Do NOT change.
+# [MATCH] = must be spelled exactly the same in every place listed.
+# [FREE]  = a label you chose. Rename it freely (then update the [MATCH] places).
+#
+# This file is loaded by the gazebo_ros2_control plugin. Its path is written in
+# urdf/robotic_arm.urdf.xacro inside the gazebo plugin's parameters tag.
+# =========================================================================
+
+# controller_manager  [FIXED]  the node name the plugin creates. Its settings go here.
 controller_manager:
+  # ros__parameters  [FIXED]  ROS 2 keyword (TWO underscores). Every node's settings sit under it.
   ros__parameters:
-    update_rate: 30  # Hz
+    # update_rate  [FIXED] key.  The value is yours: control loop runs this many times per second.
+    update_rate: 100  # Hz
 
     # Define the active controllers we want to start
+    # Format:   <name you choose>:
+    #             type: <package>/<ClassName of installed controller>
+
+    # joint_state_broadcaster  [FREE] name, but [MATCH] with:
+    #   launch/arm_display.launch.py  'load_controller ... joint_state_broadcaster'
+    # (Everybody uses this exact name by convention, so keep it.)
+    # type  [FIXED]  real installed controller. It reads the joints' state_interfaces
+    # and publishes the /joint_states topic.
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    arm_position_controller:
-      type: forward_command_controller/ForwardCommandController
+    # # arm_position_controller  [FREE] name, but [MATCH] in 3 places:
+    # #   1. here
+    # #   2. the top-level  arm_position_controller:  block below (its settings)
+    # #   3. launch/arm_display.launch.py  'load_controller ... arm_position_controller'
+    # # It also becomes the topic name:  /arm_position_controller/commands
+    # # type  [FIXED]  real installed controller. It takes a list of numbers and
+    # # forwards them straight to the joints.
+    # arm_position_controller:
+    #   type: forward_command_controller/ForwardCommandController
 
-arm_position_controller:
+    # arm_trajectory_controller  [FREE] name, but [MATCH] in 3 places:
+    #   1. here
+    #   2. the top-level  arm_trajectory_controller:  block below (its settings)
+    #   3. launch/arm_display.launch.py  'load_controller ... arm_trajectory_controller'
+    # It also becomes the topic/action names:
+    #   /arm_trajectory_controller/joint_trajectory          (topic)
+    #   /arm_trajectory_controller/follow_joint_trajectory   (action)
+    # type  [FIXED]  real installed controller. It moves the joints smoothly
+    # through a list of points over time (a trajectory).
+    arm_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+
+# Settings for the controller declared above.
+# arm_trajectory_controller  [MATCH]  with the name declared under controller_manager
+arm_trajectory_controller:
+  # ros__parameters  [FIXED]  ROS 2 keyword (TWO underscores).
   ros__parameters:
+    # joints  [FIXED] key.  The joint names are [MATCH] with urdf/robotic_arm.urdf.xacro:
+    #   the joint name="..." tag  AND  the ros2_control joint name="..." tag.
+    # ORDER MATTERS: positions: [a, b] in a trajectory point means a => 1st joint, b => 2nd.
     joints:
       - base_to_link_1_joint
       - link_1_to_link_2_joint
-    interface_name: position
+
+    # command_interfaces  [FIXED] key (a LIST, plural!).
+    #   NOTE: ForwardCommandController uses  interface_name: position  (one value).
+    #         JointTrajectoryController uses  command_interfaces: [position]  (a list).
+    #         Using the wrong key gives: "'command_interfaces' parameter is empty".
+    #   "position"  [MATCH]  with command_interface name="position" in the xacro's ros2_control block.
+    command_interfaces:
+      - position
+
+    # state_interfaces  [FIXED] key.  Values [MATCH] with state_interface name="..." in the xacro.
+    state_interfaces:
+      - position
+      - velocity
+
+    state_publish_rate: 50.0  # Hz  [FIXED] key, value is yours
+    action_monitor_rate: 20.0  # Hz  [FIXED] key, value is yours
+    allow_partial_joints_goal: false  # [FIXED] key. false = every goal must list ALL joints
+
+# Test command (after launch): move both joints to [1.0, 0.5] rad, arriving in 2 seconds
+#   ros2 topic pub --once /arm_trajectory_controller/joint_trajectory trajectory_msgs/msg/JointTrajectory "{joint_names: [base_to_link_1_joint, link_1_to_link_2_joint], points: [{positions: [1.0, 0.5], time_from_start: {sec: 2}}]}"
