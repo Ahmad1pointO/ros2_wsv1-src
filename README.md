@@ -34,11 +34,15 @@ A ROS 2 Humble workspace for learning robot modelling, simulation and control. I
 
 ▶️ [Watch the ABB SCARA robot demo](videos/Abb_Scara_robot.webm)
 
+if the video does not open, click "view raw".
+
 ### 2-DOF Robotic Arm — Joint Trajectory Controller
 
 <video src="videos/Robotic-arm-trajeectory-controleller.webm" controls width="720"></video>
 
 ▶️ [Watch the 2-DOF robotic arm demo](videos/Robotic-arm-trajeectory-controleller.webm)
+
+if the video does not open, click "view raw".
 
 ---
 
