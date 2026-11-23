@@ -23,6 +23,12 @@ A ROS 2 Humble workspace for learning robot modelling, simulation and control. I
     <td><img src="videos/Abb_scara_robot.png" alt="ABB SCARA robot in Gazebo" width="400"></td>
     <td><img src="videos/2DOF_arm.png" alt="2-DOF robotic arm" width="400"></td>
   </tr>
+  <tr>
+    <th colspan="2">ABB SCARA in Action — Automated Pick Cycle (Gazebo + RViz)</th>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="videos/ABB_Scara_in_action_with_predefined_path.png" alt="ABB SCARA running the predefined pick cycle in Gazebo and RViz" width="800"></td>
+  </tr>
 </table>
 
 ---
@@ -160,6 +166,8 @@ ros2 action send_goal /scara_trajectory_controller/follow_joint_trajectory contr
 ### Automated Pick Cycle (`scara_control`)
 
 Instead of typing the action goal by hand, the `pick_and_place` node sends the whole cycle from Python.
+
+<img src="videos/ABB_Scara_in_action_with_predefined_path.png" alt="ABB SCARA running the predefined pick cycle in Gazebo and RViz" width="720">
 
 **Terminal 1 — build and launch the simulation (Gazebo + RViz):**
 
