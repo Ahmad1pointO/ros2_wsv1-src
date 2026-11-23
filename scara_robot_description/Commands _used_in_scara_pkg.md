@@ -36,14 +36,15 @@ ros2 launch scara_robot_description scara_gazebo.launch.py
 
 
 
-## In other terminal to move the robot 
+```bash
 ros2 action send_goal /scara_trajectory_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
   trajectory: {
     joint_names: ['joint_1', 'joint_2', 'joint_3', 'joint_4'],
     points: [
-      { positions: [0.8, -1.2, 0.0, 1.57], velocities: [0.0, 0.0, 0.0, 0.0], accelerations: [0.0, 0.0, 0.0, 0.0], time_from_start: { sec: 3, nanosec: 0 } },
+      { positions: [0.8, -1.2, 0.0, 1.57],   velocities: [0.0, 0.0, 0.0, 0.0], accelerations: [0.0, 0.0, 0.0, 0.0], time_from_start: { sec: 3, nanosec: 0 } },
       { positions: [0.8, -1.2, -0.12, 1.57], velocities: [0.0, 0.0, 0.0, 0.0], accelerations: [0.0, 0.0, 0.0, 0.0], time_from_start: { sec: 5, nanosec: 0 } },
-      { positions: [0.0, 0.0, 0.0, 0.0], velocities: [0.0, 0.0, 0.0, 0.0], accelerations: [0.0, 0.0, 0.0, 0.0], time_from_start: { sec: 8, nanosec: 0 } }
+      { positions: [0.0, 0.0, 0.0, 0.0],     velocities: [0.0, 0.0, 0.0, 0.0], accelerations: [0.0, 0.0, 0.0, 0.0], time_from_start: { sec: 8, nanosec: 0 } }
     ]
   }
 }" --feedback
+```

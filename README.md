@@ -5,7 +5,8 @@ A ROS 2 Humble workspace for learning robot modelling, simulation and control. I
 | Package | Description |
 |---|---|
 | [`my_robot_description`](my_robot_description/) | 2-DOF planar robotic arm — Gazebo + RViz, `arm_trajectory_controller` |
-| [`scara_robot_description`](scara_robot_description/) | 4-DOF ABB-style SCARA robot (RRPR) — Gazebo, `scara_trajectory_controller` |
+| [`scara_robot_description`](scara_robot_description/) | 4-DOF ABB-style SCARA robot (RRPR) — Gazebo + RViz, `scara_trajectory_controller` |
+| [`scara_control`](scara_control/) | Python action client (`pick_and_place_client.py`) that runs an automated pick cycle on the SCARA from predefined joint angles |
 | [`my_robot_interfaces`](my_robot_interfaces/) | Custom messages, services and actions |
 | [`my_project`](my_project/) | Python nodes used while learning ROS 2 basics |
 
@@ -27,6 +28,18 @@ A ROS 2 Humble workspace for learning robot modelling, simulation and control. I
 ---
 
 ## Demonstrations
+
+### ABB SCARA in Action — Automated Pick Cycle (Predefined Path)
+
+The `pick_and_place` node from `scara_control` sends one 3-waypoint trajectory to the controller, shown here in Gazebo and RViz.
+
+<img src="videos/ABB_Scara_in_action_with_predefined_path.png" alt="ABB SCARA running the predefined pick cycle in Gazebo and RViz" width="720">
+
+<video src="videos/ABB_Scara_in_action_with_predefined_path.webm" controls width="720"></video>
+
+▶️ [Watch the ABB SCARA automated pick cycle](videos/ABB_Scara_in_action_with_predefined_path.webm)
+
+if the video does not open, click "view raw".
 
 ### ABB SCARA Robot (4-DOF)
 
@@ -144,6 +157,42 @@ ros2 action send_goal /scara_trajectory_controller/follow_joint_trajectory contr
 
 📄 Full command reference, including how the package was created: [`scara_robot_description/Commands _used_in_scara_pkg.md`](scara_robot_description/Commands%20_used_in_scara_pkg.md)
 
+### Automated Pick Cycle (`scara_control`)
+
+Instead of typing the action goal by hand, the `pick_and_place` node sends the whole cycle from Python.
+
+**Terminal 1 — build and launch the simulation (Gazebo + RViz):**
+
+```bash
+cd ~/ros2_wsv1
+colcon build
+source install/setup.bash
+ros2 launch scara_robot_description scara_gazebo.launch.py
+```
+
+**Terminal 2 — build and run the pick cycle:**
+
+```bash
+cd ~/ros2_wsv1
+colcon build
+source install/setup.bash
+ros2 run scara_control pick_and_place
+```
+
+The node waits for `/scara_trajectory_controller/follow_joint_trajectory`, then sends one goal with three waypoints:
+
+| Waypoint | Time | Joint positions `[j1, j2, j3, j4]` | Motion |
+|---|---|---|---|
+| 1 | 3 s | `[0.8, -1.2, 0.0, 1.57]` | Swing over the pick station |
+| 2 | 5 s | `[0.8, -1.2, -0.12, 1.57]` | Lower the quill 12 cm to the part |
+| 3 | 8 s | `[0.0, 0.0, 0.0, 0.0]` | Retract and return home |
+
+While the arm moves, it logs the live position error of all four joints. When the trajectory finishes, it reports whether the cycle succeeded, then exits.
+
+> **Current limitations:** the joint angles are predefined (no inverse kinematics yet), each run performs one cycle (no loop yet), and there is no place station or gripper.
+
+📄 Package creation command: [`scara_control/Commands_used_in_control_package.md`](scara_control/Commands_used_in_control_package.md)
+
 ---
 
 ## How trajectory interpolation works
@@ -166,6 +215,7 @@ Quintic splines give smooth position, velocity and acceleration profiles, which 
 src/
 ├── my_robot_description/       # 2-DOF arm: urdf/, config/, launch/
 ├── scara_robot_description/    # SCARA robot: urdf/, config/, launch/
+├── scara_control/              # SCARA pick-cycle action client (pick_and_place_client.py)
 ├── my_robot_interfaces/        # Custom msg / srv / action definitions
 ├── my_project/                 # Python learning nodes
 └── videos/                     # Demo recordings and screenshots
